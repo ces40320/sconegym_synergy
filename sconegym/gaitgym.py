@@ -7,15 +7,7 @@ from typing import Optional
 import gym
 import numpy as np
 
-# Add sconepy folders to path
-if sys.platform.startswith("win"):
-    sys.path.append("C:/Program Files/SCONE/bin")
-elif sys.platform.startswith("linux"):
-    sys.path.append("/opt/scone/lib")
-elif sys.platform.startswith('darwin'):
-    sys.path.append("/Applications/SCONE.app/Contents/MacOS/lib")
-
-import sconepy
+from sconetools import sconepy
 
 def find_model_file(model_file):
     this_dir, this_file = os.path.split(__file__)
