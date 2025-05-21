@@ -16,12 +16,12 @@ def run_simulation(model, store_data, random_seed, max_time=3, min_com_height=0.
 	model.init_muscle_activations(muscle_activations)
 
 	# Tweak the initial pose of the model
-	dof_positions = model.dof_position_array()
-	dof_positions += 0.1 * rng.random(len(dof_positions)) - 0.05
-	model.set_dof_positions(dof_positions)
-	for d in model.dofs():
-		if d.name() == 'pelvis_ty':
-			d.set_pos(0.1 + d.pos()) # set the value of a
+	# dof_positions = model.dof_position_array()
+	# dof_positions += 0.1 * rng.random(len(dof_positions)) - 0.05
+	# model.set_dof_positions(dof_positions)
+	# for d in model.dofs():
+	# 	if d.name() == 'pelvis_ty':
+	# 		d.set_pos(0.1 + d.pos()) # set the value of a
 
 	# IMPORTANT: set the actual pose and equilibrates the muscles
 	model.init_state_from_dofs()
@@ -29,10 +29,11 @@ def run_simulation(model, store_data, random_seed, max_time=3, min_com_height=0.
  	# Start the simulation, with time t ranging from 0 to 5
 	for t in np.arange(0, max_time, 0.01):
 		# Set actuator_inputs based on muscle force, length and velocity
-		mus_in = model.muscle_force_array()
-		mus_in += model.muscle_fiber_length_array() - 1
-		mus_in += 0.2 * model.muscle_fiber_velocity_array()
-		model.set_actuator_inputs(mus_in)
+		# mus_in = model.muscle_force_array()
+		# mus_in += model.muscle_fiber_length_array() - 1
+		# mus_in += 0.2 * model.muscle_fiber_velocity_array()
+		ext= 0.5*np.ones((len(model.muscles())))
+		model.set_actuator_inputs(ext)
 
 		# Advance the simulation to time t
 		# Internally, this performs as many simulations steps as required
@@ -67,7 +68,7 @@ def measure_performance(model_file):
 	duration = 0.0
 	start_time = time.perf_counter()
 	while duration < 2.0:
-		run_simulation(model, False, random_seed, max_time=2, min_com_height=-10)
+		run_simulation(model, True, random_seed, max_time=2, min_com_height=-10)
 		duration = time.perf_counter() - start_time
 		random_seed += 1
 		model_time += model.time()
@@ -87,13 +88,13 @@ store_data = True
 
 # Run performance benchmarks
 if sconepy.is_supported('ModelHyfydy'):
-	measure_performance('data/H0918_hfd.scone')
+	measure_performance('sconegym\data-v1\H2190_modeltest.scone')
 
-if sconepy.is_supported('ModelHyfydy'):
-	measure_performance('data/H0918_hfd_v2.scone')
+# if sconepy.is_supported('ModelHyfydy'):
+# 	measure_performance('data/H0918_hfd_v2.scone')
 
-if sconepy.is_supported('ModelOpenSim3'):
-	measure_performance('data/H0918_osim3.scone')
+# if sconepy.is_supported('ModelOpenSim3'):
+# 	measure_performance('data/H0918_osim3.scone')
 
-if sconepy.is_supported('ModelOpenSim4'):
-	measure_performance('data/H0918_osim4.scone')
+# if sconepy.is_supported('ModelOpenSim4'):
+# 	measure_performance('data/H0918_osim4.scone')

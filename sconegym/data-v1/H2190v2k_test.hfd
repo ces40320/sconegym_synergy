@@ -1,5 +1,5 @@
 model {
-	gravity = [0, 0, 0]
+	gravity = [ 0 0 0 ]
 	material {
 		name = default_material
 		static_friction = 0.9
@@ -83,12 +83,7 @@ model {
 		mesh { file = hat_skull.vtp pos { x = 0.03 y = -0.32 z = 0 } }
 		mesh { file = hat_ribs.vtp pos { x = 0.03 y = -0.32 z = 0 } }
 	}
-	joint_motor {
-		name = lumbar_joint_motor
-		joint = lumbar_joint
-		stiffness = 10
-		damping = 10
-	}
+
 	point_path_muscle {
 		name = glut_med1_r
 		max_isometric_force = 819
@@ -687,14 +682,14 @@ model {
 			{ body = torso pos { x = 0.115 y = -0.08 z = -0.028 } }
 		]
 	}
-	geometry {
-		name = platform
-		type = plane
-		normal { x = -1 y = 0 z = 0 }
-		body = ground
-		pos { x = 0 y = 0 z = 0 }
-		ori { x = 0 y = 0 z = -90 }
-	}
+	#geometry {
+		#name = platform
+		#type = plane
+		#normal { x = -1 y = 0 z = 0 }
+		#body = ground
+		#pos { x = 0 y = 0 z = 0 }
+		#ori { x = 0 y = 0 z = -90 }
+	#}
 	geometry {
 		name = heel_r
 		type = sphere
@@ -780,11 +775,39 @@ model {
 		body = torso
 		pos { x = 0.04 y = 0.24 z = 0 }
 	}
+	# pelvis 를 ground 에 weld: 모델 전체가 함께 고정/이동됨
+	joint_6dof {
+		name = weld_pelvis
+		parent = ground
+		child  = torso
+		
+		# pos_in_parent 를 pelvis 의 world 초기 위치(=body.pos)와 동일하게 설정
+		pos_in_parent {
+			x = -0.12   # 기존 pelvis pos.x 값
+			y = 1.4       # 기존 pelvis pos.y 값
+			z = 0
+		}
+		pos_in_child {
+			x = 0
+			y = 0
+			z = 0
+		}
+		translation_limits {
+			x = 0..0
+			y = 0..0
+			z = 0..0
+		}
+		limits {
+			x = 0..0
+			y = 0..0
+			z = 0..0
+		}
+	}
 	dof { name = pelvis_tilt source = pelvis_rz range = -90..90 }
 	dof { name = pelvis_list source = pelvis_rx range = -90..90 }
 	dof { name = pelvis_rotation source = pelvis_ry range = -90..90 }
 	dof { name = pelvis_tx source = pelvis_tx range = -5..5 }
-	#dof { name = pelvis_ty source = pelvis_ty range = -1..2 default = 1 }
+	dof { name = pelvis_ty source = pelvis_ty range = 0..3 default = 1 }
 	dof { name = pelvis_tz source = pelvis_tz range = -3..3 }
 	dof { name = hip_flexion_r source = hip_rz_r range = -30..120 }
 	dof { name = hip_adduction_r source = hip_rx_r range = -45..30 }
@@ -792,12 +815,6 @@ model {
 	dof { name = knee_angle_r source = knee_rz_r range = -120..10 }
 	dof { name = ankle_angle_r source = ankle_rz_r range = -60..25 }
 	dof { name = subtalar_angle_r source = ankle_rx_r range = -10..30 }
-	#dof { name = hip_flexion_l source = hip_rz_l range = -30..120 }
-	#dof { name = hip_adduction_l source = -hip_rx_l range = -45..30 }
-	#dof { name = hip_rotation_l source = -hip_ry_l range = -50..40 }
-	#dof { name = knee_angle_l source = knee_rz_l range = -120..10 }
-	#dof { name = ankle_angle_l source = ankle_rz_l range = -60..25 }
-	#dof { name = subtalar_angle_l source = -ankle_rx_l range = -10..30 }
 	dof { name = lumbar_extension source = lumbar_joint_rz range = -90..20 }
 	dof { name = lumbar_bending source = lumbar_joint_rx range = -20..20 }
 	dof { name = lumbar_rotation source = lumbar_joint_ry range = -20..20 }
