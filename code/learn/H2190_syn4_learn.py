@@ -1,4 +1,5 @@
 import os
+import sys
 import random
 import gym
 import sconegym
@@ -9,10 +10,13 @@ from stable_baselines3 import SAC
 from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback, CallbackList, BaseCallback
 from stable_baselines3.common.vec_env import SubprocVecEnv, VecNormalize, VecMonitor
 from typing import Callable
-from wrapper.H2190UnevenWrapper import H2190UnevenWrapper
-from callback.UnevenCallback import UnevenCallback
 from copy import deepcopy
 import types
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from wrapper.H2190Wrapper import H2190Wrapper
+from callback.UnevenCallback import UnevenCallback
+
 
 def linear_schedule(initial_value: float) -> Callable[[float], float]:
     def func(progress_remaining: float) -> float:
@@ -47,8 +51,8 @@ class GymCompatibilityWrapper(gym.Wrapper):
 # ─── 3) make_env 함수: env_id를 인자로 받아 환경 팩토리 반환 ────────────
 def make_env():
     def _init():
-        env = gym.make('sconewalk_h2190_terrain1-v1')
-        env = H2190UnevenWrapper(
+        env = gym.make('sconewalk_h2190-v1')
+        env = H2190Wrapper(
             env,
             syn_matrix=np.array([
                 [ 0.00000000e+00, 0.00000000e+00, 1.43556358e-01, 0.00000000e+00, 2.28869292e-03, 6.31749443e-03, 2.62268060e-01, 0.00000000e+00, 0.00000000e+00, 1.38923007e-01, 3.39865776e-01, 4.13098342e-03, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 9.14095654e-01, 1.09448373e-01, 5.07311192e-03, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 9.53598609e-01, 9.25165204e-01, 7.77242013e-01, 6.50758412e-01, 6.01791772e-01, 7.28162919e-01, 1.13007200e+00, 8.63541856e-01, 1.15143489e+00, 4.89596844e-02, 1.00364258e-01, 0.00000000e+00, 0.00000000e+00, 6.64963671e-01, 1.39827542e-01, 2.14875035e-01, 2.76581938e-01, 5.15746701e-01 ],
@@ -57,8 +61,8 @@ def make_env():
                 [ 1.85319143e-06, 7.04363492e-02, 2.81583300e-01, 0.00000000e+00, 8.63082780e-04, 2.92667040e-02, 5.55644197e-01, 4.18355319e-01, 5.12368773e-01, 8.15410907e-01, 2.62869819e-01, 2.98839074e-01, 2.00483142e-01, 2.56092040e-01, 2.55736307e-01, 2.35278552e-01, 0.00000000e+00, 8.91600226e-02, 2.31857920e-01, 1.89706737e-01, 3.18118440e-01, 3.18248725e-01, 3.02919723e-01, 1.69460985e-01, 2.89788167e-01, 4.31479543e-02, 2.05620429e-01, 0.00000000e+00, 5.67280446e-03, 0.00000000e+00, 0.00000000e+00, 7.57384077e-02, 1.30911957e-01, 0.00000000e+00, 0.00000000e+00, 6.90480543e-01, 2.09134205e-01, 3.99311658e-01, 2.63510950e-01, 6.44833112e-01 ],
             ]),
             n_syn=4,
-            terrain_dir=r"C:\Users\IlseungPark\Documents\scone_sota\sconegym-main\sconegym\data-v1\random_terrain",    # ← 추가
-            n_terrains=100,      # ← 추가
+            # terrain_dir=r"C:\Users\IlseungPark\Documents\scone_sota\sconegym-main\sconegym\data-v1\random_terrain",    # ← 추가
+            # n_terrains=100,      # ← 추가
             use_synergy=True,
             use_symmetry=False,
             init_activations_mean=0.01,
@@ -78,7 +82,7 @@ if __name__ == '__main__':
     from multiprocessing import freeze_support
     freeze_support()  # Windows 멀티프로세싱 용
 
-    result_dir = r"C:\Users\IlseungPark\Documents\scone_sota\result\uneven"
+    result_dir = r"C:\Users\ok\Documents\GitHub\sconegym\result_data\Level\syn4"
 
 
     train_env = [ make_env() for i in range(0,20) ]
