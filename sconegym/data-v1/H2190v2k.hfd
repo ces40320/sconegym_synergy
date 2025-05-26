@@ -124,12 +124,12 @@ model {
 		mesh { file = hat_skull.vtp pos { x = 0.03 y = -0.32 z = 0 } }
 		mesh { file = hat_ribs.vtp pos { x = 0.03 y = -0.32 z = 0 } }
 	}
-	joint_motor {
-		name = lumbar_joint_motor
-		joint = lumbar_joint
-		stiffness = 10
-		damping = 10
-	}
+	#joint_motor {
+	#	name = lumbar_joint_motor
+	#	joint = lumbar_joint
+	#	stiffness = 10
+	#	damping = 10
+	#}
 	point_path_muscle {
 		name = glut_med1_r
 		max_isometric_force = 819

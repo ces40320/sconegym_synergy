@@ -1,5 +1,5 @@
 model {
-	gravity = [ 0 0 0 ]
+	#gravity = [ 0 0 0 ]
 	material {
 		name = default_material
 		static_friction = 0.9

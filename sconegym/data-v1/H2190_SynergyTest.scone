@@ -1,6 +1,6 @@
 # Model used in simulation
 ModelHyfydy {
-	model_file = H2190v2k_test.hfd
+	model_file = H2190v2k_SynergyTest.hfd
 
 	#fixed_control_step_size = 0.005
 	#initial_equilibration_activation = 0.05

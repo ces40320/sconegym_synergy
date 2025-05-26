@@ -58,27 +58,31 @@ def generate_synergy_matrix(data_path, n_components = 6, exclude_muscles = []):
             activation_ndarray = np.vstack((activation_ndarray, activation_data_trimmed.to_numpy()))
 
     # 최종 데이터 확인
-    # print("activation_ndarray shape:", activation_ndarray.shape)
+    print("activation_ndarray shape:", activation_ndarray.shape)
 
 
     # NMF 모델 생성 및 적용
 
-    nmf_model = NMF(n_components=n_components, init='random', random_state=100, max_iter=1000)
+    nmf_model = NMF(n_components=n_components, init='random', random_state=1000000, max_iter=100000000)
 
     W = nmf_model.fit_transform(activation_ndarray)
     H = nmf_model.components_
 
-    # 각 열에서 가장 큰 수치를 갖는 원소의 위치 찾기 및 스케일 조정
-    max_indices = np.argmax(W, axis=0)
-    for col_index, row_index in enumerate(max_indices):
-        max_value = W[row_index, col_index]
-        if max_value > 1.0:
-            W[:, col_index] /= max_value
-            H[col_index, :] *= max_value
-            print(f"열 {col_index}의 최대값 {max_value}로 W와 H를 조정했습니다.")
-            
-            
-    return H
+
+    for i in range(0, n_components):
+        max_value = np.max(W[:, i])
+
+        W[:, i] /= max_value
+        H[i, :] *= max_value
+
+    for i in range(0, n_components):
+        print(f"Maximum W[{i},:] = ", np.max(W[:,i]))
+    
+    for i in range(0, n_components):
+        print(f"Maximum H[{i},:] = ", np.max(H[i,:]))
+        
+
+    return H, activation_cols
 
 
 
@@ -87,11 +91,11 @@ if __name__ == "__main__":
     # 데이터 경로와 차원 수를 지정하여 함수 호출
     # generate_synergy_matrix(data_path, n_components)
 
-    data_path = r'E:\Dropbox\walk_rl\Data\mocap\MocoInv\H2190\AfterTendonCompliance_R'
-    n_components = 10  # 차원 축소 후의 차원 수
+    data_path = r'E:\Dropbox\walk_rl\Data\mocap\MocoInv\H2190\BeforeTendonCompliance_R' # 24_2\Biomechanical Analysis of Motor Skill\
+    n_components = 5  # 차원 축소 후의 차원 수
     exclude_muscles =  ['rect_abd_r', 'ext_obl_r', 'int_obl_r', 'quad_lumb_r', 'erec_sp_r'] # 상체 근육 제외
     
-    H = generate_synergy_matrix(data_path, n_components, exclude_muscles)
+    H, _ = generate_synergy_matrix(data_path, n_components, exclude_muscles)
 
     # H 행렬 출력
     print("H = np.array([")
@@ -99,9 +103,9 @@ if __name__ == "__main__":
         print("    [", ", ".join(f"{value:.8e}" for value in row), "],")
     print("])")
 
-    # 의사역행렬 (Moore-Penrose pseudo-inverse) 계산 및 출력
-    pseudo_inverse = np.linalg.pinv(H)
-    print("pseudo_inverse = np.array([")
-    for row in pseudo_inverse:
-        print("    [", ", ".join(f"{value:.8f}" for value in row), "],")
-    print("])")
+    # # 의사역행렬 (Moore-Penrose pseudo-inverse) 계산 및 출력
+    # pseudo_inverse = np.linalg.pinv(H)
+    # print("pseudo_inverse = np.array([")
+    # for row in pseudo_inverse:
+    #     print("    [", ", ".join(f"{value:.8f}" for value in row), "],")
+    # print("])")
