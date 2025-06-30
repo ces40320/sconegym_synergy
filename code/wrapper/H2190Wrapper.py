@@ -130,6 +130,10 @@ class H2190Wrapper(Wrapper):
     def reset(self, **kwargs):
         
         # 멀쩡히 리셋 호출
+        self.env.model.set_store_data(self._do_store_next)
+        if self._do_store_next:
+            self.env.store_next_episode()
+            self._do_store_next = False
         _ = self.env.reset(**kwargs)
         self.time = 0.0
         self.phase = 0.0
