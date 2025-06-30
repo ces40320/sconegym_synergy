@@ -8,7 +8,7 @@ from sklearn.decomposition import NMF
 # data_path = r'E:\Dropbox\walk_rl\Data\mocap\MocoInv\R'
 # n_components = 12  # 차원 축소 후의 차원 수
 
-def generate_synergy_matrix(data_path, n_components = 6, exclude_muscles = []):
+def generate_synergy_matrix(data_path, n_components = 6, exclude_muscles=False, include_muscles = False):
     """
     지정 경로의 .sto 파일들을 읽어들여 활성화 데이터 행렬을 구성하고,
     NMF를 통해 n_components 차원으로 분해한 후 H 행렬과 해당 의사역행렬(pseudo-inverse)을 계산하여 반환합니다.
@@ -45,6 +45,10 @@ def generate_synergy_matrix(data_path, n_components = 6, exclude_muscles = []):
         if exclude_muscles is not False:
             # 상체근육 제외 ['rect_abd_r', 'ext_obl_r', 'int_obl_r', 'quad_lumb_r', 'erec_sp_r']
             activation_cols = [col for col in activation_cols if not any(exclude in col for exclude in exclude_muscles)]
+        elif include_muscles is not False:
+            # 특정 근육만 포함
+            activation_cols = [col for col in activation_cols if any(include in col for include in include_muscles)] 
+            
         
         activation_df = df[activation_cols]
 
@@ -92,10 +96,10 @@ if __name__ == "__main__":
     # generate_synergy_matrix(data_path, n_components)
 
     data_path = r'E:\Dropbox\walk_rl\Data\mocap\MocoInv\H2190\BeforeTendonCompliance_R' # 24_2\Biomechanical Analysis of Motor Skill\
-    n_components = 5  # 차원 축소 후의 차원 수
-    exclude_muscles =  ['rect_abd_r', 'ext_obl_r', 'int_obl_r', 'quad_lumb_r', 'erec_sp_r'] # 상체 근육 제외
+    n_components = 4  # 차원 축소 후의 차원 수
+    selected_muscles =  ['rect_abd_r', 'ext_obl_r', 'int_obl_r', 'quad_lumb_r', 'erec_sp_r'] # 상체 근육 제외
     
-    H, _ = generate_synergy_matrix(data_path, n_components, exclude_muscles)
+    H, _ = generate_synergy_matrix(data_path, n_components, exclude_muscles=selected_muscles)   # include_muscles 인지 exclude_muscles 인지 확인 필수
 
     # H 행렬 출력
     print("H = np.array([")
@@ -103,9 +107,9 @@ if __name__ == "__main__":
         print("    [", ", ".join(f"{value:.8e}" for value in row), "],")
     print("])")
 
-    # # 의사역행렬 (Moore-Penrose pseudo-inverse) 계산 및 출력
-    # pseudo_inverse = np.linalg.pinv(H)
-    # print("pseudo_inverse = np.array([")
-    # for row in pseudo_inverse:
-    #     print("    [", ", ".join(f"{value:.8f}" for value in row), "],")
-    # print("])")
+    # 의사역행렬 (Moore-Penrose pseudo-inverse) 계산 및 출력
+    pseudo_inverse = np.linalg.pinv(H)
+    print("pseudo_inverse = np.array([")
+    for row in pseudo_inverse:
+        print("    [", ", ".join(f"{value:.8f}" for value in row), "],")
+    print("])")
