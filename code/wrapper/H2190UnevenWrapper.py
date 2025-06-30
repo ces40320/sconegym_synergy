@@ -171,6 +171,12 @@ class H2190UnevenWrapper(Wrapper):
 
         # 3) 진짜 reset 호출 → 초기 상태 세팅
         super().reset(**kwargs)
+        self.time = 0.0
+        self.phase = 0.0
+        self.last_event_time = self.env.time    # super().reset() 후 time은 0.0
+        self.prev_left_contact  = False
+        self.prev_right_contact = False
+        self.last_strike = None
 
         # 4) wrapper 전용 obs 반환
         return self._get_obs_3d()
@@ -203,7 +209,7 @@ class H2190UnevenWrapper(Wrapper):
         action = np.clip(action, 0, 1.0)
 
         self.env.model.set_actuator_inputs(action)
-        self.env.model.advance_simulation_to(self.env.time + self.step_size)
+        self.env.model.advance_simulation_to(self.time + self.step_size)
         # 원본 step 실행 (obs 무시)
         # 6) compute reward with custom weighting
         rwd_dict = self._update_rwd_dict()
@@ -230,8 +236,8 @@ class H2190UnevenWrapper(Wrapper):
                 # fall 에만 패널티 적용
                 reward -= self.fall_penalty
         # 8) update time & total reward
-        self.env.time         += self.step_size
         self.env.total_reward += reward
+        self.time += self.step_size
 
         # 9) end‐of‐episode bookkeeping
         if done:
@@ -272,6 +278,7 @@ class H2190UnevenWrapper(Wrapper):
         head_acc = env.head_body.com_acc().array()
         head_angv= env.head_body.ang_vel().array()
         feet     = env._get_feet_relative_position()
+        phi = self.phase_detect()
 
         def apply_sym(phi, musc_idc, musc_idc_m,
                       dof_idc, dof_idc_m,
@@ -306,11 +313,11 @@ class H2190UnevenWrapper(Wrapper):
                 apply_sym(phi, idx, idx_m, dof_idc, dof_idc_m, feet_idc, feet_idc_m, grf_idc, grf_idc_m)
 
 
-        
+        phi_arr = np.array([phi], dtype=np.float32)
         return np.concatenate([
             m_fibl, m_fibv, m_force, m_exc,
            head_or, head_acc, head_angv,
-            feet, dof_values, dof_vels, acts, grf
+            feet, dof_values, dof_vels, acts, grf, phi_arr
         ], dtype=np.float32).copy()
     
         
