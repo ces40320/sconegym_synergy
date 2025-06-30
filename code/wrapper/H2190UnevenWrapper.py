@@ -36,7 +36,7 @@ class H2190UnevenWrapper(Wrapper):
         use_symmetry: bool = True,
         init_activations_mean: float = 0.01,
         init_activations_std:  float = 0.0,
-        fall_penalty: float = 100.0,
+        fall_penalty: float = 250,
         step_size: float = 0.025,
     ):
         super().__init__(env)
