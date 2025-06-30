@@ -232,6 +232,7 @@ class H2190Wrapper(Wrapper):
         head_acc = env.head_body.com_acc().array()
         head_angv= env.head_body.ang_vel().array()
         feet     = env._get_feet_relative_position()
+        phi = self.phase_detect()
 
         def apply_sym(phi, musc_idc, musc_idc_m,
                       dof_idc, dof_idc_m,
