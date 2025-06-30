@@ -374,8 +374,6 @@ class H2190Wrapper(Wrapper):
 
             # 골반 기준 상대 높이가 threshold 이하이면 '넘어진 것'으로 간주
             REL_HEIGHT_THRESHOLD = 0.3  # 예시값: 0.2m
-            # if com_y <3:
-            #     return True
             if com_y - ground_y < -REL_HEIGHT_THRESHOLD:
                 return True
             if com_y - ground_y < REL_HEIGHT_THRESHOLD:
