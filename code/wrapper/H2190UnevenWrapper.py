@@ -267,6 +267,7 @@ class H2190UnevenWrapper(Wrapper):
         dof_values = env.model.dof_position_array()
         dof_vels   = env.model.dof_velocity_array()
         dof_values[3] = 0.0
+        dof_values[4] = 0.0
         dof_values[5] = 0.0
 
         m_fibl = env.model.muscle_fiber_length_array()
@@ -331,7 +332,7 @@ class H2190UnevenWrapper(Wrapper):
             "number_muscles": 0* env._number_muscle_cost(),
             "constr"      : env.joint_limit_coeff * env._joint_limit_torques(),
             "self_contact": 0  * env._get_self_contact(),
-            "effort"      : -0.2 * self._effort_cost(),
+            "effort"      : -0.15 * self._effort_cost(),
             
         }
     
@@ -342,8 +343,9 @@ class H2190UnevenWrapper(Wrapper):
         v_var_x = 0.07**2
         v_var_z = 0.15**2
         lumb_rot_var=0.2**2
+        ori_var = 0.06**2
         # angvel_var = [0.2442**2, 0.2603**2, 0.3258**2] %너무 강해서 제거함함
-        angvel_var = [0.6**2, 0.65**2, 1.2**2]
+        angvel_var = [0.6**2, 0.65**2, 1.4**2]
         acc_var    = [0.4799**2, 1.7942**2, 0.7716**2]
 
         vel_x = env.model_velocity()
@@ -351,14 +353,18 @@ class H2190UnevenWrapper(Wrapper):
         lumb_rot = env.model.dof_position_array()[-1]
         head_angvel = env.head_body.ang_vel().array()
         head_acc    = env.head_body.com_acc().array()
-
-        r_vel_x = np.exp(-c * (vel_x - env.target_vel)**2 / v_var_x)
+        head_ori = env.head_body.orientation().y
+        if vel_x < env.target_vel:
+            r_vel_x = np.exp(-c *   (vel_x - env.target_vel)**2 / v_var_x)
+        else:
+            r_vel_x = 1
         r_vel_z = np.exp(-c * vel_z**2 / v_var_z)
-        r_lumb_rot= np.exp(-c * lumb_rot**2 / lumb_rot_var)
+        # r_lumb_rot= np.exp(-c * lumb_rot**2 / lumb_rot_var)
+        r_ori = np.exp(-c * head_ori**2 / ori_var)
         #----------아래는 3축다!------------
         r_head_angvel = np.prod([
             np.exp(-c * head_angvel[i]**2 / angvel_var[i])
-            for i in range(0,3,2)
+            for i in range(0,3)
         ])
 
 
@@ -372,7 +378,7 @@ class H2190UnevenWrapper(Wrapper):
             for i in range(3)
         ])
         #----------------------------------
-        return r_vel_x * r_head_angvel*r_vel_z*r_lumb_rot
+        return r_vel_x * r_head_angvel*r_vel_z
     
 
     def _effort_cost(self):
