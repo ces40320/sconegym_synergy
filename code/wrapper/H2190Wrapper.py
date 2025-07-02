@@ -181,7 +181,11 @@ class H2190Wrapper(Wrapper):
         reward = self.env._apply_termination_cost(reward, done)
 
         
-        info = {}
+        info = {
+        "gaussian_vel": rwd_dict["gaussian_vel"],
+        "constr"      : rwd_dict["constr"],
+        "effort"      : rwd_dict["effort"],
+        }
         if done:
             # env.steps 는 매 step 마다 GaitGym 내부에서 ++ 됩니다
             max_steps = getattr(self.env, '_max_episode_steps', None)
