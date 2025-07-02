@@ -21,7 +21,7 @@ class H2190Wrapper(Wrapper):
         use_symmetry: bool = True,
         init_activations_mean: float = 0.01,
         init_activations_std:  float = 0.0,
-        fall_penalty: float = 250.0,
+        fall_penalty: float = 100.0,
         step_size: float = 0.025
     ):
         super().__init__(env)
@@ -364,11 +364,11 @@ class H2190Wrapper(Wrapper):
         env = self.env
         c = 0.06
         v_var_x = 0.07**2
-        v_var_z = 0.10**2
+        v_var_z = 0.15**2
         lumb_rot_var=0.2**2
         ori_var = 0.06**2
         # angvel_var = [0.2442**2, 0.2603**2, 0.3258**2] %너무 강해서 제거함함
-        angvel_var = [0.6**2, 0.65**2, 1.4**2]
+        angvel_var = [0.6**2, 0.65**2, 1.2**2]
         acc_var    = [0.4799**2, 1.7942**2, 0.7716**2]
 
         vel_x = env.model_velocity()

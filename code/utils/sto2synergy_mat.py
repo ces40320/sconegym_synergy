@@ -95,12 +95,11 @@ if __name__ == "__main__":
     # 데이터 경로와 차원 수를 지정하여 함수 호출
     # generate_synergy_matrix(data_path, n_components)
 
-    data_path = r'C:\Users\ok\Desktop\NMSM_WalkRL\Moco\Inverse' # 24_2\Biomechanical Analysis of Motor Skill\
-    n_components = 10  # 차원 축소 후의 차원 수
+    data_path = r'E:\Dropbox\walk_rl\Data\mocap\MocoInv\H2190\BeforeTendonCompliance_R' # 24_2\Biomechanical Analysis of Motor Skill\
+    n_components = 4  # 차원 축소 후의 차원 수
     selected_muscles =  ['rect_abd_r', 'ext_obl_r', 'int_obl_r', 'quad_lumb_r', 'erec_sp_r'] # 상체 근육 제외
     
-    # H, _ = generate_synergy_matrix(data_path, n_components, exclude_muscles=selected_muscles)   # include_muscles 인지 exclude_muscles 인지 확인 필수
-    H, _ = generate_synergy_matrix(data_path, n_components)   # include_muscles 인지 exclude_muscles 인지 확인 필수
+    H, _ = generate_synergy_matrix(data_path, n_components, exclude_muscles=selected_muscles)   # include_muscles 인지 exclude_muscles 인지 확인 필수
 
     # H 행렬 출력
     print("H = np.array([")
