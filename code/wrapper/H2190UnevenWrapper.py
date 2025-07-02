@@ -393,7 +393,7 @@ class H2190UnevenWrapper(Wrapper):
             "number_muscles": 0* env._number_muscle_cost(),
             "constr"      : env.joint_limit_coeff * env._joint_limit_torques(),
             "self_contact": 0  * env._get_self_contact(),
-            "effort"      : -0.15 * self._effort_cost(),
+            "effort"      : -0.1 * self._effort_cost(),
             
         }
     
@@ -402,7 +402,7 @@ class H2190UnevenWrapper(Wrapper):
         env = self.env
         c = 0.06
         v_var_x = 0.07**2
-        v_var_z = 0.15**2
+        v_var_z = 0.10**2
         lumb_rot_var=0.2**2
         ori_var = 0.06**2
         # angvel_var = [0.2442**2, 0.2603**2, 0.3258**2] %너무 강해서 제거함함
