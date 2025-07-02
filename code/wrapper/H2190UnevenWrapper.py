@@ -251,6 +251,92 @@ class H2190UnevenWrapper(Wrapper):
 
         return obs, reward, done, info
 
+    def mirror_obs_numpy(self, obs: np.ndarray) -> np.ndarray:
+        """
+        1D obs (shape [obs_dim], numpy) 를 좌우 대칭 뒤집어 반환합니다.
+        """
+        obs_m = obs.copy()
+
+        # ── 1)~4) muscle 관련 4개 블록 (각각 90차원)
+        mus = 90
+        r1 = np.arange(0, 40)
+        l1 = np.arange(40, 80)
+        tr = np.arange(80, 85)
+        tl = np.arange(85, 90)
+        idx_m = np.concatenate([l1, r1, tl, tr])
+        for b in range(4):
+            s = b * mus
+            obs_m[s : s + mus] = obs[s : s + mus][idx_m]
+
+        # ── 5) head orientation (quaternion w,x,y,z) : x,y 성분 부호 반전
+        head_ori_start = 4 * mus
+        # w 성분 그대로
+        obs_m[head_ori_start + 0] = obs[head_ori_start + 0]
+        # x, y 성분은 반전
+        obs_m[head_ori_start + 1] = -obs[head_ori_start + 1]
+        obs_m[head_ori_start + 2] = -obs[head_ori_start + 2]
+        # z 성분 그대로
+        obs_m[head_ori_start + 3] = obs[head_ori_start + 3]
+
+        # ── 6) head_angv (3차원) : [vx,vy,vz] -> [-vx, -vy, vz]
+        h = head_ori_start + 4
+        obs_m[h + 0] = -obs[h + 0]
+        obs_m[h + 1] = -obs[h + 1]
+        obs_m[h + 2] =  obs[h + 2]
+
+        # ── 7) feet (6차원) : [0,1,2,3,4,5] -> [-3,4,5, -0,1,2]
+        f = h + 3
+        b0 = obs[f : f + 6]
+        obs_m[f + 0] =  b0[3]
+        obs_m[f + 1] =  b0[4]
+        obs_m[f + 2] = -b0[5]
+        obs_m[f + 3] =  b0[0]
+        obs_m[f + 4] =  b0[1]
+        obs_m[f + 5] = -b0[2]
+
+        # ── 8) dof_values (21차원)
+        d = f + 6
+        idx2_m = np.array([0,1,2,3,4,5,12,13,14,15,16,17,6,7,8,9,10,11,18,19,20], dtype=int)
+        signs_pos = np.array([ 1,-1,-1, 1, 1, 1, 1,1,1,1,1,1,1,1,1,1,1,1,1,-1,-1], dtype=obs.dtype)
+        blk = obs[d : d + 21]
+        perm = blk[idx2_m]
+        obs_m[d : d + 21] = perm * signs_pos
+
+        # ── 9) dof_vels (21차원)
+        v = d + 21
+        blk = obs[v : v + 21]
+        perm = blk[idx2_m]
+        signs_vel = np.array([ 1,-1,-1, 1, 1,-1, 1,1,1,1,1,1,1,1,1,1,1,1,1,-1,-1], dtype=obs.dtype)
+        obs_m[v : v + 21] = perm * signs_vel
+
+        # ── 10) acts (90차원) : muscle 과 동일하게 swap
+        a = v + 21
+        obs_m[a : a + mus] = obs[a : a + mus][idx_m]
+
+        # ── 11) grf (6차원) : [0,1,2,3,4,5] -> [3,4,-5, 0,1,-2]
+        g = a + mus
+        b0 = obs[g : g + 6]
+        obs_m[g + 0] =  b0[3]
+        obs_m[g + 1] =  b0[4]
+        obs_m[g + 2] = -b0[5]
+        obs_m[g + 3] =  b0[0]
+        obs_m[g + 4] =  b0[1]
+        obs_m[g + 5] = -b0[2]
+
+        et =g+6
+        b0 = obs[et : et + 2]
+        obs_m[et + 0] = b0[1]  # exo_torque_r
+        obs_m[et + 1] = b0[0]  # exo_torque_l
+        # ── 12) com_vel (3차원) : [vx,vy,vz] -> [vx, vy, -vz]
+        c = et + 2
+        b0 = obs[c : c + 3]
+        obs_m[c + 0] =  b0[0]
+        obs_m[c + 1] =  b0[1]
+        obs_m[c + 2] = -b0[2]
+
+        # tv(1)와 slope(1)은 그대로
+        return obs_m
+    
     def _get_obs_3d(self):
         # same as your modified method, but using self.env.*
         env = self.env
@@ -263,7 +349,7 @@ class H2190UnevenWrapper(Wrapper):
         Rleg = env.model.legs()[1] 
         grf = np.array([ Lleg.contact_force().x , Lleg.contact_force().y , Lleg.contact_force().z,
                          Rleg.contact_force().x , Rleg.contact_force().y , Rleg.contact_force().z ]) / (env.model.mass()*9.81)
-
+        com_vel = np.array([env.model.com_vel().x, env.model.com_vel().y, env.model.com_vel().z])
         dof_values = env.model.dof_position_array()
         dof_vels   = env.model.dof_velocity_array()
         dof_values[3] = 0.0
@@ -276,50 +362,25 @@ class H2190UnevenWrapper(Wrapper):
         m_exc  = env.model.muscle_excitation_array()
 
         head_or  = env.head_body.orientation().array()
-        head_acc = env.head_body.com_acc().array()
+        # head_acc = env.head_body.com_acc().array()
         head_angv= env.head_body.ang_vel().array()
         feet     = env._get_feet_relative_position()
         phi = self.phase_detect()
-
-        def apply_sym(phi, musc_idc, musc_idc_m,
-                      dof_idc, dof_idc_m,
-                      feet_idc, feet_idc_m,
-                      grf_idc, grf_idc_m):
-            if phi >= 0.5:
-                m_fibl[musc_idc] = m_fibl[musc_idc_m]
-                m_fibv[musc_idc] = m_fibv[musc_idc_m]
-                m_force[musc_idc]   = m_force[musc_idc_m]
-                m_exc[musc_idc]     = m_exc[musc_idc_m]
-                feet[feet_idc]  = feet[feet_idc_m]
-                acts[musc_idc]      = acts[musc_idc_m]
-                dof_values[dof_idc] = dof_values[dof_idc_m]
-                dof_vels[dof_idc]   = dof_vels[dof_idc_m]
-                grf[grf_idc] = grf[grf_idc_m]
-
-
-        n_act = len(env.model.actuators())
-        n_mus = len(env.model.muscles())
-        if self.use_symmetry:
-                phi = self.phase_detect()
-                idx = np.arange(0, 90) 
-                idx_m = np.concatenate([
-                    np.arange(40, 80),  # 40 ~ 79
-                    np.arange(0, 40),   # 0 ~ 39
-                    np.arange(85, 90),  # 85 ~ 89
-                    np.arange(80, 85)   # 80 ~ 84
-                ])
-                dof_idc, dof_idc_m = np.arange(21), np.array([0,1,2,3,4,5,12,13,14,15,16,17,6,7,8,9,10,11,18,19,20])
-                feet_idc, feet_idc_m = np.arange(6), np.array([3,4,5,0,1,2])
-                grf_idc, grf_idc_m = np.arange(6), np.array([3,4,5,0,1,2])
-                apply_sym(phi, idx, idx_m, dof_idc, dof_idc_m, feet_idc, feet_idc_m, grf_idc, grf_idc_m)
-
-
-        phi_arr = np.array([phi], dtype=np.float32)
-        return np.concatenate([
+        slope_arr = np.array([self.slope], dtype=np.float32)
+        raw_obs = np.concatenate([
             m_fibl, m_fibv, m_force, m_exc,
-           head_or, head_acc, head_angv,
-            feet, dof_values, dof_vels, acts, grf, phi_arr
+           head_or, head_angv,
+            feet, dof_values, dof_vels, acts, grf, com_vel, slope_arr
         ], dtype=np.float32).copy()
+
+        if self.use_symmetry ==True:
+            phi = self.phase_detect()
+            if phi >= 0.5:
+                raw_obs = self.mirror_obs_numpy(raw_obs)
+
+
+        
+        return raw_obs
     
         
     def _update_rwd_dict(self):
